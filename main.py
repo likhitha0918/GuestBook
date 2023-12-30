@@ -1,11 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
-from datetime import datetime
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///messages.db'  # Use any preferred DB connection
-
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///messages.db'  # Use your preferred DB connection
 db = SQLAlchemy(app)
 
 class Message(db.Model):
@@ -34,5 +31,6 @@ def sign():
         return render_template('templates.html', error=error)
 
 if __name__ == '__main__':
-    db.create_all()
-    app.run()
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
