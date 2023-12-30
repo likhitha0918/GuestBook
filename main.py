@@ -17,7 +17,7 @@ class Message(ndb.Model):
 class MainPage(webapp2.RequestHandler):
     def get(self):
         messages = Message.query().order(-Message.created).fetch()
-        template = jinja_env.get_template('index.html')
+        template = jinja_env.get_template('templates.html')
         self.response.out.write(template.render(messages=messages))
 
 # Handler for submitting a new message
