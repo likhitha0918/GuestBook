@@ -1,3 +1,2 @@
-webapp2
-jinja2
-google-cloud-ndb
+Flask
+Flask-SQLAlchemy
