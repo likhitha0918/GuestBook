@@ -32,7 +32,7 @@ class NewMessage(webapp2.RequestHandler):
             self.redirect('/')
         else:
             error = "Please enter both your name and a message!"
-            template = jinja_env.get_template('index.html')
+            template = jinja_env.get_template('templates.html')
             self.response.out.write(template.render(error=error))
 
 app = webapp2.WSGIApplication([
