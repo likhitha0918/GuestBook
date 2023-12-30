@@ -1,41 +1,39 @@
-import os
-import webapp2
-import jinja2
-from google.appengine.ext import ndb
+from flask 
+import Flask, render_template, request, redirect, url_for
+from flask_sqlalchemy 
+import SQLAlchemy
+from datetime 
+import datetime
 
-# Set up Jinja environment for HTML templates
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///messages.db'  # Use your preferred DB connection
+db = SQLAlchemy(app)
 
-# Define the Message model in Datastore
-class Message(ndb.Model):
-    author = ndb.StringProperty()
-    content = ndb.TextProperty()
-    created = ndb.DateTimeProperty(auto_now_add=True)
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    author = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Handler for the main page (guestbook)
-class MainPage(webapp2.RequestHandler):
-    def get(self):
-        messages = Message.query().order(-Message.created).fetch()
-        template = jinja_env.get_template('templates.html')
-        self.response.out.write(template.render(messages=messages))
+@app.route('/')
+def index():
+    messages = Message.query.order_by(Message.created.desc()).all()
+    return render_template('index.html', messages=messages)
 
-# Handler for submitting a new message
-class NewMessage(webapp2.RequestHandler):
-    def post(self):
-        author = self.request.get('author')
-        content = self.request.get('content')
+@app.route('/sign', methods=['POST'])
+def sign():
+    author = request.form['author']
+    content = request.form['content']
 
-        if author and content:
-            message = Message(author=author, content=content)
-            message.put()
-            self.redirect('/')
-        else:
-            error = "Please enter both your name and a message!"
-            template = jinja_env.get_template('templates.html')
-            self.response.out.write(template.render(error=error))
+    if author and content:
+        new_message = Message(author=author, content=content)
+        db.session.add(new_message)
+        db.session.commit()
+    else:
+        error = "Please enter both your name and a message!"
+        return render_template('error.html', error=error)
 
-app = webapp2.WSGIApplication([
-    ('/', MainPage),
-    ('/sign', NewMessage)
-], debug=True)
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
